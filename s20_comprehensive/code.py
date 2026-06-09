@@ -27,6 +27,12 @@ except ImportError:
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+import sys
+from pathlib import Path as _DebugPath
+sys.path.insert(0, str(_DebugPath(__file__).resolve().parents[1]))
+from debug_trace import print_messages
+
+
 load_dotenv(override=True)
 if os.getenv("ANTHROPIC_BASE_URL"):
     os.environ.pop("ANTHROPIC_AUTH_TOKEN", None)
@@ -2081,6 +2087,7 @@ def cron_autorun_loop(history: list, context: dict):
                 terminal_print(
                     f"  \033[35m[cron auto] {job.prompt[:60]}\033[0m")
             agent_loop(history, context)
+            print_messages(history[turn_start:])
             context.update(update_context(context, history))
             print_turn_assistants(history, turn_start)
 
@@ -2105,6 +2112,7 @@ if __name__ == "__main__":
         history.append({"role": "user", "content": query})
         with agent_lock:
             agent_loop(history, context)
+            print_messages(history[turn_start:])
             context = update_context(context, history)
             print_turn_assistants(history, turn_start)
 

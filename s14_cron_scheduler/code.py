@@ -36,6 +36,12 @@ except ImportError:
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+import sys
+from pathlib import Path as _DebugPath
+sys.path.insert(0, str(_DebugPath(__file__).resolve().parents[1]))
+from debug_trace import print_messages
+
+
 load_dotenv(override=True)
 if os.getenv("ANTHROPIC_BASE_URL"):
     os.environ.pop("ANTHROPIC_AUTH_TOKEN", None)
@@ -762,9 +768,11 @@ def print_latest_assistant_text(messages: list):
 def run_agent_turn_locked(user_query: str | None = None):
     """Run one agent turn. Caller must hold agent_lock."""
     global session_context
+    trace_start = len(session_history)
     if user_query is not None:
         session_history.append({"role": "user", "content": user_query})
     session_context = agent_loop(session_history, session_context)
+    print_messages(session_history[trace_start:])
     session_context = update_context(session_context, session_history)
     print_latest_assistant_text(session_history)
     print()

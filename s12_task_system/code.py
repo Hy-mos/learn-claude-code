@@ -33,6 +33,12 @@ except ImportError:
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+import sys
+from pathlib import Path as _DebugPath
+sys.path.insert(0, str(_DebugPath(__file__).resolve().parents[1]))
+from debug_trace import print_messages
+
+
 load_dotenv(override=True)
 if os.getenv("ANTHROPIC_BASE_URL"):
     os.environ.pop("ANTHROPIC_AUTH_TOKEN", None)
@@ -367,8 +373,10 @@ if __name__ == "__main__":
             break
         if query.strip().lower() in ("q", "exit", ""):
             break
+        trace_start = len(history)
         history.append({"role": "user", "content": query})
         agent_loop(history, context)
+        print_messages(history[trace_start:])
         context = update_context(context, history)
         for block in history[-1]["content"]:
             if getattr(block, "type", None) == "text":
